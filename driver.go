@@ -20,6 +20,16 @@ type myDummyDriver struct {
 
 //-----------------------------------------------------------------------------
 // POST /VolumeDriver.Create
+//
+// Request:
+//  { "Name": "volume_name" }
+//  Instruct the plugin that the user wants to create a volume, given a user
+//  specified volume name. The plugin does not need to actually manifest the
+//  volume on the filesystem yet (until Mount is called).
+//
+// Response:
+//  { "Err": null }
+//  Respond with a string error if an error occurred.
 //-----------------------------------------------------------------------------
 
 func (d myDummyDriver) Create(r dkvolume.Request) dkvolume.Response {
