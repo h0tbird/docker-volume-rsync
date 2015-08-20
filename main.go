@@ -1,16 +1,21 @@
 package main
 
 //-----------------------------------------------------------------------------
-// Package factored import statement.
+// Package factored import statement:
 //-----------------------------------------------------------------------------
 
 import (
+
+	// Native imports:
 	"flag"
 	"fmt"
+
+	// External imports:
+	"github.com/calavera/dkvolume"
 )
 
 //-----------------------------------------------------------------------------
-// Package variable declarations factored into a block.
+// Package variable declarations factored into a block:
 //-----------------------------------------------------------------------------
 
 var (
@@ -21,7 +26,7 @@ var (
 //-----------------------------------------------------------------------------
 // func init() is called after all the variable declarations in the package
 // have evaluated their initializers, and those are evaluated only after all
-// the imported packages have been initialized.
+// the imported packages have been initialized:
 //-----------------------------------------------------------------------------
 
 func init() {
@@ -29,10 +34,13 @@ func init() {
 }
 
 //-----------------------------------------------------------------------------
-// Function main of package main.
+// Function main of package main:
 //-----------------------------------------------------------------------------
 
 func main() {
 
 	fmt.Printf("Hello World!\n")
+	d := myDummyDriver{}
+	h := dkvolume.NewHandler(d)
+	h.ServeUnix("root", "dummy_volume")
 }
