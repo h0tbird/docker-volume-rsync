@@ -19,8 +19,8 @@ import (
 //-----------------------------------------------------------------------------
 
 var (
-	flag_a = flag.Bool("flag_a", false, "Flag a is true or false")
-	flag_b = flag.Bool("flag_b", false, "Flag b is true or false")
+	flagA = flag.Bool("flagA", false, "Flag A is true or false")
+	flagB = flag.Bool("flagB", false, "Flag B is true or false")
 )
 
 //-----------------------------------------------------------------------------
