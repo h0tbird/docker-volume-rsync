@@ -9,6 +9,7 @@ import (
 	// Native imports:
 	"flag"
 	"fmt"
+	"os"
 
 	// External imports:
 	"github.com/calavera/dkvolume"
@@ -30,7 +31,25 @@ var (
 //-----------------------------------------------------------------------------
 
 func init() {
+
+	// Check for mandatory argc:
+	if len(os.Args) < 1 {
+		usage()
+	}
+
+	// Parse commandline flags:
+	flag.Usage = usage
 	flag.Parse()
+}
+
+//-----------------------------------------------------------------------------
+// func usage() reports the correct commandline usage for this driver:
+//-----------------------------------------------------------------------------
+
+func usage() {
+	fmt.Fprintf(os.Stderr, "Usage: %s [options]\n", os.Args[0])
+	flag.PrintDefaults()
+	os.Exit(2)
 }
 
 //-----------------------------------------------------------------------------
@@ -39,8 +58,12 @@ func init() {
 
 func main() {
 
-	fmt.Printf("Hello World!\n")
+	// Initialize the driver struct:
 	d := myDummyDriver{}
+
+	// Initializes the request handler with a driver implementation:
 	h := dkvolume.NewHandler(d)
-	h.ServeUnix("root", "dummy_volume")
+
+	// Listen for requests in a unix socket:
+	fmt.Println(h.ServeUnix("root", "dummy_volume"))
 }
