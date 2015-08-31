@@ -1,3 +1,7 @@
+//-----------------------------------------------------------------------------
+// Package membership:
+//-----------------------------------------------------------------------------
+
 package main
 
 //-----------------------------------------------------------------------------
@@ -73,7 +77,7 @@ func (d myDummyDriver) Remove(r dkvolume.Request) dkvolume.Response {
 
 func (d myDummyDriver) Path(r dkvolume.Request) dkvolume.Response {
 	log.Printf("Reporting path for volume %s\n", r.Name)
-	return dkvolume.Response{}
+	return dkvolume.Response{Mountpoint: "/tmp/foo"}
 }
 
 //-----------------------------------------------------------------------------
@@ -92,7 +96,7 @@ func (d myDummyDriver) Path(r dkvolume.Request) dkvolume.Response {
 
 func (d myDummyDriver) Mount(r dkvolume.Request) dkvolume.Response {
 	log.Printf("Mounting volume %s\n", r.Name)
-	return dkvolume.Response{}
+	return dkvolume.Response{Mountpoint: "/tmp/foo"}
 }
 
 //-----------------------------------------------------------------------------
