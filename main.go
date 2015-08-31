@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	// Community:
 	"github.com/calavera/dkvolume"
@@ -35,6 +36,7 @@ import (
 //-----------------------------------------------------------------------------
 
 const (
+	id            = "rsync"
 	socketAddress = "/var/run/docker/plugins/rsync.sock"
 )
 
@@ -43,8 +45,10 @@ const (
 //-----------------------------------------------------------------------------
 
 var (
-	archive  = flag.Bool("archive", true, "archive mode; equals -rlptgoD")
-	compress = flag.Bool("compress", false, "compress file data during the transfer")
+	defaultPath = filepath.Join(dkvolume.DefaultDockerRootDirectory, id)
+	root        = flag.String("root", defaultPath, "Docker volumes root directory")
+	archive     = flag.Bool("archive", true, "Archive mode; equals -rlptgoD")
+	compress    = flag.Bool("compress", false, "Compress file data during the transfer")
 )
 
 //-----------------------------------------------------------------------------
@@ -82,7 +86,7 @@ func usage() {
 func main() {
 
 	// Initialize the driver struct:
-	d := rsyncDriver{}
+	d := newRsyncDriver(*root)
 
 	// Initializes the request handler with a driver implementation:
 	h := dkvolume.NewHandler(d)

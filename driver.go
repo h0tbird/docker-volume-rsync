@@ -12,6 +12,9 @@ import (
 
 	// Standard library:
 	"log"
+	"os"
+	"path/filepath"
+	"strings"
 
 	// Community:
 	"github.com/calavera/dkvolume"
@@ -22,7 +25,19 @@ import (
 //-----------------------------------------------------------------------------
 
 type rsyncDriver struct {
-	name string
+	root     string
+	src, dst string
+}
+
+//-----------------------------------------------------------------------------
+// Initialize the driver's data structure:
+//-----------------------------------------------------------------------------
+
+func newRsyncDriver(root string) *rsyncDriver {
+	d := rsyncDriver{
+		root: root,
+	}
+	return &d
 }
 
 //-----------------------------------------------------------------------------
@@ -39,8 +54,20 @@ type rsyncDriver struct {
 //  Respond with a string error if an error occurred.
 //-----------------------------------------------------------------------------
 
-func (d rsyncDriver) Create(r dkvolume.Request) dkvolume.Response {
-	log.Printf("Creating volume %s\n", r.Name)
+func (d *rsyncDriver) Create(r dkvolume.Request) dkvolume.Response {
+
+	// Rsync source:
+	d.src = strings.Replace(r.Name, "/", ":/", 1) + "/"
+	log.Printf("Rsync source is %s\n", d.src)
+
+	// Rsync destination:
+	d.dst = filepath.Join(d.root, r.Name) + "/"
+	if err := os.MkdirAll(d.dst, 0755); err != nil {
+		return dkvolume.Response{Err: err.Error()}
+	}
+	log.Printf("Rsync destination is %s\n", d.dst)
+
+	// Return:
 	return dkvolume.Response{}
 }
 
@@ -57,8 +84,8 @@ func (d rsyncDriver) Create(r dkvolume.Request) dkvolume.Response {
 //  Respond with a string error if an error occurred.
 //-----------------------------------------------------------------------------
 
-func (d rsyncDriver) Remove(r dkvolume.Request) dkvolume.Response {
-	log.Printf("Removing volume %s\n", r.Name)
+func (d *rsyncDriver) Remove(r dkvolume.Request) dkvolume.Response {
+	log.Printf("Removing volume %s\n", d.dst)
 	return dkvolume.Response{}
 }
 
@@ -75,9 +102,9 @@ func (d rsyncDriver) Remove(r dkvolume.Request) dkvolume.Response {
 //  made available, and/or a string error if an error occurred.
 //-----------------------------------------------------------------------------
 
-func (d rsyncDriver) Path(r dkvolume.Request) dkvolume.Response {
-	log.Printf("Reporting path for volume %s\n", r.Name)
-	return dkvolume.Response{Mountpoint: "/tmp/foo"}
+func (d *rsyncDriver) Path(r dkvolume.Request) dkvolume.Response {
+	log.Printf("Reporting path: %s\n", d.dst)
+	return dkvolume.Response{Mountpoint: d.dst}
 }
 
 //-----------------------------------------------------------------------------
@@ -94,9 +121,9 @@ func (d rsyncDriver) Path(r dkvolume.Request) dkvolume.Response {
 //  made available, and/or a string error if an error occurred.
 //-----------------------------------------------------------------------------
 
-func (d rsyncDriver) Mount(r dkvolume.Request) dkvolume.Response {
-	log.Printf("Mounting volume %s\n", r.Name)
-	return dkvolume.Response{Mountpoint: "/tmp/foo"}
+func (d *rsyncDriver) Mount(r dkvolume.Request) dkvolume.Response {
+	log.Printf("Mounting: %s\n", d.dst)
+	return dkvolume.Response{Mountpoint: d.dst}
 }
 
 //-----------------------------------------------------------------------------
@@ -113,7 +140,7 @@ func (d rsyncDriver) Mount(r dkvolume.Request) dkvolume.Response {
 //  Respond with a string error if an error occurred.
 //-----------------------------------------------------------------------------
 
-func (d rsyncDriver) Unmount(r dkvolume.Request) dkvolume.Response {
+func (d *rsyncDriver) Unmount(r dkvolume.Request) dkvolume.Response {
 	log.Printf("Unmounting volume %s\n", r.Name)
 	return dkvolume.Response{}
 }
