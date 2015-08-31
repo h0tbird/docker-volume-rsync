@@ -6,12 +6,12 @@ package main
 
 import (
 
-	// Native imports:
+	// Standard library:
 	"flag"
 	"fmt"
 	"os"
 
-	// External imports:
+	// Community:
 	"github.com/calavera/dkvolume"
 )
 

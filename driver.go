@@ -6,7 +6,10 @@ package main
 
 import (
 
-	// External imports:
+	// Standard library:
+	"log"
+
+	// Community:
 	"github.com/calavera/dkvolume"
 )
 
@@ -33,6 +36,7 @@ type myDummyDriver struct {
 //-----------------------------------------------------------------------------
 
 func (d myDummyDriver) Create(r dkvolume.Request) dkvolume.Response {
+	log.Printf("Creating volume %s\n", r.Name)
 	return dkvolume.Response{}
 }
 
@@ -50,6 +54,7 @@ func (d myDummyDriver) Create(r dkvolume.Request) dkvolume.Response {
 //-----------------------------------------------------------------------------
 
 func (d myDummyDriver) Remove(r dkvolume.Request) dkvolume.Response {
+	log.Printf("Removing volume %s\n", r.Name)
 	return dkvolume.Response{}
 }
 
@@ -67,6 +72,7 @@ func (d myDummyDriver) Remove(r dkvolume.Request) dkvolume.Response {
 //-----------------------------------------------------------------------------
 
 func (d myDummyDriver) Path(r dkvolume.Request) dkvolume.Response {
+	log.Printf("Reporting path for volume %s\n", r.Name)
 	return dkvolume.Response{}
 }
 
@@ -85,6 +91,7 @@ func (d myDummyDriver) Path(r dkvolume.Request) dkvolume.Response {
 //-----------------------------------------------------------------------------
 
 func (d myDummyDriver) Mount(r dkvolume.Request) dkvolume.Response {
+	log.Printf("Mounting volume %s\n", r.Name)
 	return dkvolume.Response{}
 }
 
@@ -103,5 +110,6 @@ func (d myDummyDriver) Mount(r dkvolume.Request) dkvolume.Response {
 //-----------------------------------------------------------------------------
 
 func (d myDummyDriver) Unmount(r dkvolume.Request) dkvolume.Response {
+	log.Printf("Unmounting volume %s\n", r.Name)
 	return dkvolume.Response{}
 }
