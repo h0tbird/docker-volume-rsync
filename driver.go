@@ -21,7 +21,7 @@ import (
 // Structs definitions.
 //-----------------------------------------------------------------------------
 
-type myDummyDriver struct {
+type rsyncDriver struct {
 	name string
 }
 
@@ -39,7 +39,7 @@ type myDummyDriver struct {
 //  Respond with a string error if an error occurred.
 //-----------------------------------------------------------------------------
 
-func (d myDummyDriver) Create(r dkvolume.Request) dkvolume.Response {
+func (d rsyncDriver) Create(r dkvolume.Request) dkvolume.Response {
 	log.Printf("Creating volume %s\n", r.Name)
 	return dkvolume.Response{}
 }
@@ -57,7 +57,7 @@ func (d myDummyDriver) Create(r dkvolume.Request) dkvolume.Response {
 //  Respond with a string error if an error occurred.
 //-----------------------------------------------------------------------------
 
-func (d myDummyDriver) Remove(r dkvolume.Request) dkvolume.Response {
+func (d rsyncDriver) Remove(r dkvolume.Request) dkvolume.Response {
 	log.Printf("Removing volume %s\n", r.Name)
 	return dkvolume.Response{}
 }
@@ -75,7 +75,7 @@ func (d myDummyDriver) Remove(r dkvolume.Request) dkvolume.Response {
 //  made available, and/or a string error if an error occurred.
 //-----------------------------------------------------------------------------
 
-func (d myDummyDriver) Path(r dkvolume.Request) dkvolume.Response {
+func (d rsyncDriver) Path(r dkvolume.Request) dkvolume.Response {
 	log.Printf("Reporting path for volume %s\n", r.Name)
 	return dkvolume.Response{Mountpoint: "/tmp/foo"}
 }
@@ -94,7 +94,7 @@ func (d myDummyDriver) Path(r dkvolume.Request) dkvolume.Response {
 //  made available, and/or a string error if an error occurred.
 //-----------------------------------------------------------------------------
 
-func (d myDummyDriver) Mount(r dkvolume.Request) dkvolume.Response {
+func (d rsyncDriver) Mount(r dkvolume.Request) dkvolume.Response {
 	log.Printf("Mounting volume %s\n", r.Name)
 	return dkvolume.Response{Mountpoint: "/tmp/foo"}
 }
@@ -113,7 +113,7 @@ func (d myDummyDriver) Mount(r dkvolume.Request) dkvolume.Response {
 //  Respond with a string error if an error occurred.
 //-----------------------------------------------------------------------------
 
-func (d myDummyDriver) Unmount(r dkvolume.Request) dkvolume.Response {
+func (d rsyncDriver) Unmount(r dkvolume.Request) dkvolume.Response {
 	log.Printf("Unmounting volume %s\n", r.Name)
 	return dkvolume.Response{}
 }

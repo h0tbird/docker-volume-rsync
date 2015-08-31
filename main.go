@@ -2,10 +2,10 @@
 // This volume driver is meant to be used by docker >= 1.8.x
 //
 // 1- run the driver:
-// docker-volume-plugin
+// sudo docker-volume-rsync
 //
 // 2- run the container:
-// docker run -it --rm --volume-driver dummy_volume -v foo:/foo alpine sh
+// docker run -it --volume-driver rsync -v src.host.org/foo:/foo alpine sh
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
@@ -23,6 +23,7 @@ import (
 	// Standard library:
 	"flag"
 	"fmt"
+	"log"
 	"os"
 
 	// Community:
@@ -30,12 +31,20 @@ import (
 )
 
 //-----------------------------------------------------------------------------
+// Package constant declarations factored into a block:
+//-----------------------------------------------------------------------------
+
+const (
+	socketAddress = "/var/run/docker/plugins/rsync.sock"
+)
+
+//-----------------------------------------------------------------------------
 // Package variable declarations factored into a block:
 //-----------------------------------------------------------------------------
 
 var (
-	flagA = flag.Bool("flagA", false, "Flag A is true or false")
-	flagB = flag.Bool("flagB", false, "Flag B is true or false")
+	archive  = flag.Bool("archive", true, "archive mode; equals -rlptgoD")
+	compress = flag.Bool("compress", false, "compress file data during the transfer")
 )
 
 //-----------------------------------------------------------------------------
@@ -73,11 +82,12 @@ func usage() {
 func main() {
 
 	// Initialize the driver struct:
-	d := myDummyDriver{}
+	d := rsyncDriver{}
 
 	// Initializes the request handler with a driver implementation:
 	h := dkvolume.NewHandler(d)
 
 	// Listen for requests in a unix socket:
-	fmt.Println(h.ServeUnix("root", "dummy_volume"))
+	log.Printf("Listening on %s\n", socketAddress)
+	fmt.Println(h.ServeUnix("root", socketAddress))
 }
