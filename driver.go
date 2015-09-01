@@ -34,6 +34,35 @@ type rsyncDriver struct {
 }
 
 //-----------------------------------------------------------------------------
+// func rsyncArgs() returns a string of arguments to rsync
+//-----------------------------------------------------------------------------
+
+func (d *rsyncDriver) rsyncArgs() string {
+
+	args := []string{}
+
+	if d.archive {
+		args = append(args, "--archive")
+	}
+	if d.compress {
+		args = append(args, "--compress")
+	}
+	if d.delete {
+		args = append(args, "--delete")
+	}
+
+	// Remote shell customization:
+	args = append(
+		args,
+		fmt.Sprintf(
+			`-e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet -i "%s"'`,
+			d.sshKey),
+	)
+
+	return strings.Join(args, " ")
+}
+
+//-----------------------------------------------------------------------------
 // POST /VolumeDriver.Create
 //
 // Request:
@@ -58,30 +87,14 @@ func (d *rsyncDriver) Create(r dkvolume.Request) dkvolume.Response {
 		return dkvolume.Response{Err: err.Error()}
 	}
 
-	// Take care of runtime provided rsync arguments:
-	args := []string{}
-
-	if d.archive {
-		args = append(args, "--archive")
-	}
-	if d.compress {
-		args = append(args, "--compress")
-	}
-	if d.delete {
-		args = append(args, "--delete")
-	}
-
-	// Remote shell customization:
-	args = append(args, fmt.Sprintf(`-e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet -i "%s"'`, d.sshKey))
-
 	// Forge the command:
-	command := "rsync " + strings.Join(args, " ") + " " + d.src + " " + d.dst
+	command := "rsync " + d.rsyncArgs() + " " + d.src + " " + d.dst
 	cmdRsync := exec.Command("/bin/sh", "-c", command)
 	cmdRsync.Stdout = os.Stdout
 	cmdRsync.Stderr = os.Stderr
-	log.Printf("Executing: %s", command)
 
 	// Shellout rsync:
+	log.Printf("Pulling data from: %s", d.src)
 	if err := cmdRsync.Run(); err != nil {
 		log.Printf("error: %v\n", err)
 		return dkvolume.Response{Err: err.Error()}
@@ -105,7 +118,6 @@ func (d *rsyncDriver) Create(r dkvolume.Request) dkvolume.Response {
 //-----------------------------------------------------------------------------
 
 func (d *rsyncDriver) Remove(r dkvolume.Request) dkvolume.Response {
-	log.Printf("Removing volume %s\n", d.dst)
 	return dkvolume.Response{}
 }
 
@@ -123,7 +135,6 @@ func (d *rsyncDriver) Remove(r dkvolume.Request) dkvolume.Response {
 //-----------------------------------------------------------------------------
 
 func (d *rsyncDriver) Path(r dkvolume.Request) dkvolume.Response {
-	log.Printf("Reporting path: %s\n", d.dst)
 	return dkvolume.Response{Mountpoint: d.dst}
 }
 
@@ -142,7 +153,7 @@ func (d *rsyncDriver) Path(r dkvolume.Request) dkvolume.Response {
 //-----------------------------------------------------------------------------
 
 func (d *rsyncDriver) Mount(r dkvolume.Request) dkvolume.Response {
-	log.Printf("Mounting: %s\n", d.dst)
+	log.Printf("Mount point: %s\n", d.dst)
 	return dkvolume.Response{Mountpoint: d.dst}
 }
 
@@ -161,6 +172,19 @@ func (d *rsyncDriver) Mount(r dkvolume.Request) dkvolume.Response {
 //-----------------------------------------------------------------------------
 
 func (d *rsyncDriver) Unmount(r dkvolume.Request) dkvolume.Response {
-	log.Printf("Unmounting volume %s\n", r.Name)
+
+	// Forge the command:
+	command := "rsync " + d.rsyncArgs() + " " + d.dst + " " + d.src
+	cmdRsync := exec.Command("/bin/sh", "-c", command)
+	cmdRsync.Stdout = os.Stdout
+	cmdRsync.Stderr = os.Stderr
+
+	// Shellout rsync:
+	log.Printf("Pushing data to %s\n", d.src)
+	if err := cmdRsync.Run(); err != nil {
+		log.Printf("error: %v\n", err)
+		return dkvolume.Response{Err: err.Error()}
+	}
+
 	return dkvolume.Response{}
 }
