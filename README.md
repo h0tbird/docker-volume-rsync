@@ -25,7 +25,7 @@ docker run -it --volume-driver rsync -v src.host.org/foo:/foo alpine sh
 ```
 
 ####Acknowledgments
-I learn by copying and pasting someone else's code and adjusting it to my needs. This wouldn't have been possible without the code I borrowed from David Calavera and Matthias Kadenbach so thank you!
+I learn by copying and pasting someone else's code and adjusting it to my needs (stackoverflow also helps). This wouldn't have been possible without the code I borrowed from David Calavera and Matthias Kadenbach so thank you!
 
 ####Devel stuff:
 [Docker Plugins](https://github.com/docker/docker/blob/master/docs/extend/index.md)
