@@ -11,6 +11,7 @@ package main
 import (
 
 	// Standard library:
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -26,7 +27,8 @@ import (
 //-----------------------------------------------------------------------------
 
 type rsyncDriver struct {
-	volRoot, src, dst string
+	src, dst          string
+	volRoot, sshKey   string
 	archive, compress bool
 	delete            bool
 }
@@ -70,7 +72,7 @@ func (d *rsyncDriver) Create(r dkvolume.Request) dkvolume.Response {
 	}
 
 	// Remote shell customization:
-	args = append(args, "-e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet'")
+	args = append(args, fmt.Sprintf(`-e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet -i "%s"'`, d.sshKey))
 
 	// Forge the command:
 	command := "rsync " + strings.Join(args, " ") + " " + d.src + " " + d.dst

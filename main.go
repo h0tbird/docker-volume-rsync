@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/user"
 	"path/filepath"
 
 	// Community:
@@ -45,12 +46,31 @@ const (
 //-----------------------------------------------------------------------------
 
 var (
+
+	// Predefined defaults:
 	defVolRoot = filepath.Join(dkvolume.DefaultDockerRootDirectory, id)
-	volRoot    = flag.String("volroot", defVolRoot, "Docker volumes root directory")
-	archive    = flag.Bool("archive", true, "Archive mode; equals -rlptgoD")
-	delete     = flag.Bool("delete", false, "Delete extraneous files from dest dirs")
-	compress   = flag.Bool("compress", false, "Compress file data during the transfer")
+	defSshKey  = sshKeyPath()
+
+	// Flags:
+	volRoot  = flag.String("volroot", defVolRoot, "Docker volumes root directory")
+	archive  = flag.Bool("archive", true, "Archive mode; equals -rlptgoD")
+	delete   = flag.Bool("delete", false, "Delete extraneous files from dest dirs")
+	compress = flag.Bool("compress", false, "Compress file data during the transfer")
+	sshKey   = flag.String("ssh-private-key", defSshKey, "Path to the private SSH key")
 )
+
+//-----------------------------------------------------------------------------
+// func sshKeyPath() returns the path to the current user's default private
+// ssh key file.
+//-----------------------------------------------------------------------------
+
+func sshKeyPath() string {
+	usr, err := user.Current()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return filepath.Join(usr.HomeDir, ".ssh/id_rsa")
+}
 
 //-----------------------------------------------------------------------------
 // func init() is called after all the variable declarations in the package
@@ -89,6 +109,7 @@ func main() {
 	// Initialize the driver struct:
 	d := rsyncDriver{
 		volRoot:  *volRoot,
+		sshKey:   *sshKey,
 		archive:  *archive,
 		delete:   *delete,
 		compress: *compress,
