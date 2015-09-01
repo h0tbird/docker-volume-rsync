@@ -24,7 +24,7 @@ sudo docker-volume-rsync \
 
 ####Run a container
 ```
-docker run -it --volume-driver rsync -v src.host.org/foo:/foo alpine sh
+docker run -it --volume-driver rsync -v remote.host.org/foo:/foo alpine sh
 ```
 
 ####Acknowledgments
