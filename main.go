@@ -54,7 +54,7 @@ var (
 	// Flags:
 	volRoot  = flag.String("volroot", defVolRoot, "Docker volumes root directory")
 	archive  = flag.Bool("archive", true, "Archive mode; equals -rlptgoD")
-	delete   = flag.Bool("delete", false, "Delete extraneous files from dest dirs")
+	del      = flag.Bool("delete", false, "Delete extraneous files from dest dirs")
 	compress = flag.Bool("compress", false, "Compress file data during the transfer")
 	sshKey   = flag.String("ssh-private-key", defSshKey, "Path to the private SSH key")
 )
@@ -108,10 +108,11 @@ func main() {
 
 	// Initialize the driver struct:
 	d := rsyncDriver{
+		srcdst:   make(map[string]string),
 		volRoot:  *volRoot,
 		sshKey:   *sshKey,
 		archive:  *archive,
-		delete:   *delete,
+		del:      *del,
 		compress: *compress,
 	}
 

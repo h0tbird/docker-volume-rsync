@@ -27,10 +27,9 @@ import (
 //-----------------------------------------------------------------------------
 
 type rsyncDriver struct {
-	src, dst          string
-	volRoot, sshKey   string
-	archive, compress bool
-	delete            bool
+	srcdst                 map[string]string
+	volRoot, sshKey        string
+	archive, compress, del bool
 }
 
 //-----------------------------------------------------------------------------
@@ -47,7 +46,7 @@ func (d *rsyncDriver) rsyncArgs() string {
 	if d.compress {
 		args = append(args, "--compress")
 	}
-	if d.delete {
+	if d.del {
 		args = append(args, "--delete")
 	}
 
@@ -79,22 +78,31 @@ func (d *rsyncDriver) rsyncArgs() string {
 func (d *rsyncDriver) Create(r dkvolume.Request) dkvolume.Response {
 
 	// Parse rsync source and destination:
-	d.src = strings.Replace(r.Name, "/", ":/", 1) + "/"
-	d.dst = filepath.Join(d.volRoot, r.Name) + "/"
+	src := strings.Replace(r.Name, "/", ":/", 1) + "/"
+	dst := filepath.Join(d.volRoot, r.Name) + "/"
+
+	// Check whether remote is in use:
+	if _, ok := d.srcdst[r.Name]; ok {
+		log.Printf("Already in use: %s", src)
+		return dkvolume.Response{Err: "Remote already in use"}
+	}
+
+	// Remember me:
+	d.srcdst[r.Name] = dst
 
 	// Create the destination directory:
-	if err := os.MkdirAll(d.dst, 0755); err != nil {
+	if err := os.MkdirAll(dst, 0755); err != nil {
 		return dkvolume.Response{Err: err.Error()}
 	}
 
 	// Forge the command:
-	command := "rsync " + d.rsyncArgs() + " " + d.src + " " + d.dst
+	command := "rsync " + d.rsyncArgs() + " " + src + " " + dst
 	cmdRsync := exec.Command("/bin/sh", "-c", command)
 	cmdRsync.Stdout = os.Stdout
 	cmdRsync.Stderr = os.Stderr
 
 	// Shellout rsync:
-	log.Printf("Pulling data from: %s", d.src)
+	log.Printf("Pulling data from: %s", src)
 	if err := cmdRsync.Run(); err != nil {
 		log.Printf("error: %v\n", err)
 		return dkvolume.Response{Err: err.Error()}
@@ -135,7 +143,7 @@ func (d *rsyncDriver) Remove(r dkvolume.Request) dkvolume.Response {
 //-----------------------------------------------------------------------------
 
 func (d *rsyncDriver) Path(r dkvolume.Request) dkvolume.Response {
-	return dkvolume.Response{Mountpoint: d.dst}
+	return dkvolume.Response{Mountpoint: d.srcdst[r.Name]}
 }
 
 //-----------------------------------------------------------------------------
@@ -153,8 +161,8 @@ func (d *rsyncDriver) Path(r dkvolume.Request) dkvolume.Response {
 //-----------------------------------------------------------------------------
 
 func (d *rsyncDriver) Mount(r dkvolume.Request) dkvolume.Response {
-	log.Printf("Mount point: %s\n", d.dst)
-	return dkvolume.Response{Mountpoint: d.dst}
+	log.Printf("Mount point: %s\n", d.srcdst[r.Name])
+	return dkvolume.Response{Mountpoint: d.srcdst[r.Name]}
 }
 
 //-----------------------------------------------------------------------------
@@ -174,17 +182,19 @@ func (d *rsyncDriver) Mount(r dkvolume.Request) dkvolume.Response {
 func (d *rsyncDriver) Unmount(r dkvolume.Request) dkvolume.Response {
 
 	// Forge the command:
-	command := "rsync " + d.rsyncArgs() + " " + d.dst + " " + d.src
+	src := strings.Replace(r.Name, "/", ":/", 1) + "/"
+	command := "rsync " + d.rsyncArgs() + " " + d.srcdst[r.Name] + " " + src
 	cmdRsync := exec.Command("/bin/sh", "-c", command)
 	cmdRsync.Stdout = os.Stdout
 	cmdRsync.Stderr = os.Stderr
 
 	// Shellout rsync:
-	log.Printf("Pushing data to %s\n", d.src)
+	log.Printf("Pushing data to %s\n", src)
 	if err := cmdRsync.Run(); err != nil {
 		log.Printf("error: %v\n", err)
 		return dkvolume.Response{Err: err.Error()}
 	}
 
+	delete(d.srcdst, r.Name)
 	return dkvolume.Response{}
 }
