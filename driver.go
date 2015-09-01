@@ -13,6 +13,7 @@ import (
 	// Standard library:
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -21,23 +22,13 @@ import (
 )
 
 //-----------------------------------------------------------------------------
-// Structs definitions.
+// Structs definitions:
 //-----------------------------------------------------------------------------
 
 type rsyncDriver struct {
-	root     string
-	src, dst string
-}
-
-//-----------------------------------------------------------------------------
-// Initialize the driver's data structure:
-//-----------------------------------------------------------------------------
-
-func newRsyncDriver(root string) *rsyncDriver {
-	d := rsyncDriver{
-		root: root,
-	}
-	return &d
+	volRoot, src, dst string
+	archive, compress bool
+	delete            bool
 }
 
 //-----------------------------------------------------------------------------
@@ -56,16 +47,43 @@ func newRsyncDriver(root string) *rsyncDriver {
 
 func (d *rsyncDriver) Create(r dkvolume.Request) dkvolume.Response {
 
-	// Rsync source:
+	// Parse rsync source and destination:
 	d.src = strings.Replace(r.Name, "/", ":/", 1) + "/"
-	log.Printf("Rsync source is %s\n", d.src)
+	d.dst = filepath.Join(d.volRoot, r.Name) + "/"
 
-	// Rsync destination:
-	d.dst = filepath.Join(d.root, r.Name) + "/"
+	// Create the destination directory:
 	if err := os.MkdirAll(d.dst, 0755); err != nil {
 		return dkvolume.Response{Err: err.Error()}
 	}
-	log.Printf("Rsync destination is %s\n", d.dst)
+
+	// Take care of runtime provided rsync arguments:
+	args := []string{}
+
+	if d.archive {
+		args = append(args, "--archive")
+	}
+	if d.compress {
+		args = append(args, "--compress")
+	}
+	if d.delete {
+		args = append(args, "--delete")
+	}
+
+	// Remote shell customization:
+	args = append(args, "-e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet'")
+
+	// Forge the command:
+	command := "rsync " + strings.Join(args, " ") + " " + d.src + " " + d.dst
+	cmdRsync := exec.Command("/bin/sh", "-c", command)
+	cmdRsync.Stdout = os.Stdout
+	cmdRsync.Stderr = os.Stderr
+	log.Printf("Executing: %s", command)
+
+	// Shellout rsync:
+	if err := cmdRsync.Run(); err != nil {
+		log.Printf("error: %v\n", err)
+		return dkvolume.Response{Err: err.Error()}
+	}
 
 	// Return:
 	return dkvolume.Response{}

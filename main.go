@@ -45,10 +45,11 @@ const (
 //-----------------------------------------------------------------------------
 
 var (
-	defaultPath = filepath.Join(dkvolume.DefaultDockerRootDirectory, id)
-	root        = flag.String("root", defaultPath, "Docker volumes root directory")
-	archive     = flag.Bool("archive", true, "Archive mode; equals -rlptgoD")
-	compress    = flag.Bool("compress", false, "Compress file data during the transfer")
+	defVolRoot = filepath.Join(dkvolume.DefaultDockerRootDirectory, id)
+	volRoot    = flag.String("volroot", defVolRoot, "Docker volumes root directory")
+	archive    = flag.Bool("archive", true, "Archive mode; equals -rlptgoD")
+	delete     = flag.Bool("delete", false, "Delete extraneous files from dest dirs")
+	compress   = flag.Bool("compress", false, "Compress file data during the transfer")
 )
 
 //-----------------------------------------------------------------------------
@@ -86,10 +87,15 @@ func usage() {
 func main() {
 
 	// Initialize the driver struct:
-	d := newRsyncDriver(*root)
+	d := rsyncDriver{
+		volRoot:  *volRoot,
+		archive:  *archive,
+		delete:   *delete,
+		compress: *compress,
+	}
 
 	// Initializes the request handler with a driver implementation:
-	h := dkvolume.NewHandler(d)
+	h := dkvolume.NewHandler(&d)
 
 	// Listen for requests in a unix socket:
 	log.Printf("Listening on %s\n", socketAddress)
