@@ -23,6 +23,5 @@ _testmain.go
 *.test
 *.prof
 
-docker-volume-plugin
 *.swp
 docker-volume-rsync
